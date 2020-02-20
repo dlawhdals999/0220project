@@ -3,9 +3,12 @@ package quiz;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 
+import board.BoardMain;
 import board.DBUtil;
+import login.MemberInfoVO;
 
 public class QuizDAO {
 
@@ -80,7 +83,22 @@ public class QuizDAO {
 			e.printStackTrace();
 		}
 		return quizvo;
+	}
+
+	public static void addScore(int an, int wr) {
 		
+		try {
+			MemberInfoVO vo = BoardMain.getMvo();
+			Connection conn = DBUtil.getMySQLConnection();
+			String sql = "UPDATE memberinfo SET answerCount=? , wrongCount=? WHERE userNo=?";
+			PreparedStatement pstmt = conn.prepareStatement(sql);
+			pstmt.setInt(1, an);
+			pstmt.setInt(2, wr);
+			pstmt.setInt(3, vo.getUserNo());
+			pstmt.executeUpdate();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 	}
 
 }
