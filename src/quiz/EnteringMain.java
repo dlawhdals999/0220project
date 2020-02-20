@@ -23,13 +23,15 @@ import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
+import board.BoardMain;
+
 
 
 
 public class EnteringMain extends JFrame implements ActionListener{
 
 //	텍스트 필드
-	JTextArea quizField = new JTextArea();;
+	JTextArea quizField = new JTextArea();
 	JTextField answerField = new JTextField();
 	JTextField wrong1Field = new JTextField();
 	JTextField wrong2Field = new JTextField();
@@ -37,10 +39,27 @@ public class EnteringMain extends JFrame implements ActionListener{
 	JTextField quizPasswordField = new JPasswordField();
 	JTextField password2Field = new JPasswordField();
 //	버튼 필드	
-	JButton saveButton = new JButton("저장하기");
+	JButton saveButton = new JButton("저장");
 	JButton cancelButton = new JButton("나가기");
+	QuizVO vo = new QuizVO();
 	
 	public EnteringMain() {
+		entering();
+	}
+
+	public EnteringMain(QuizVO vo) {
+		this.vo = vo; 
+		entering();
+		quizField.setText(vo.getQuiz());
+		answerField.setText(vo.getAnswer());
+		wrong1Field.setText(vo.getwrong1());
+		wrong2Field.setText(vo.getwrong2());
+		wrong3Field.setText(vo.getwrong3());
+	
+		
+	}
+
+	private void entering() {
 		setTitle("문제입력");
 //		이미지
 		MainPanel panel = new MainPanel(new ImageIcon(".\\src\\images\\inputquiz1.png").getImage());
@@ -106,7 +125,7 @@ public class EnteringMain extends JFrame implements ActionListener{
 		panel.add(password2Field);
 		
 //		저장 버튼
-		JButton saveButton = new JButton("저장");
+		
 		saveButton.setBounds(383, 658, 123, 44);
 		saveButton.setBackground(new Color(9605538));
 		saveButton.setForeground(new Color(16777215));
@@ -116,7 +135,7 @@ public class EnteringMain extends JFrame implements ActionListener{
 		panel.add(saveButton);
 		
 //		나가기 버튼
-		JButton cancelButton = new JButton("나가기");
+		
 		cancelButton.setBounds(574, 658, 123, 44);
 		cancelButton.setBackground(new Color(9605538));
 		cancelButton.setForeground(new Color(16777215));
@@ -162,8 +181,7 @@ public class EnteringMain extends JFrame implements ActionListener{
 //			비밀번호 확인
 			if(quizPassword.equals(password2)) {
 				
-			
-			QuizVO vo = new QuizVO();
+		
 			vo.setQuiz(quiz);
 			vo.setAnswer(answer);
 			vo.setwrong1(wrong1);
@@ -191,6 +209,7 @@ public class EnteringMain extends JFrame implements ActionListener{
 			
 //			퀴즈필드에 포커스를 옮겨준다.
 			quizField.requestFocus();
+			
 			}
 			else {
 				JOptionPane.showMessageDialog(null, "비밀번호를 다시 확인해주세요");
@@ -200,7 +219,57 @@ public class EnteringMain extends JFrame implements ActionListener{
 		case "나가기" :
 			this.setVisible(false);
 			break;
+			
+		case "수정" :
+//			텍스트 필드들에서 입력받은 데이터를 각 저장공간에 저장시켜준다.
+			quiz = quizField.getText().trim();
+			StringBuffer quiz11 = new StringBuffer(quiz);
+			for (int i = 1; i <= (int)quiz.length() / 20; i++) {
+				if(i == 1) {
+					quiz11.insert(20 * i, "<br>");
+				}else {
+					quiz11.insert(20 * i + 4 * (i-1), "<br>");
+					
+				}
+			}
+			quiz = quiz11+"";
+			answer = answerField.getText().trim();
+			wrong1 = wrong1Field.getText().trim();
+			wrong2 = wrong2Field.getText().trim();
+			wrong3 = wrong3Field.getText().trim();
+			quizPassword = quizPasswordField.getText().trim();
+			password2 = password2Field.getText().trim();
+//			비밀번호 확인
+			if(quizPassword.equals(password2)) {
+			
+			
+			vo.setQuiz(quiz);
+			vo.setAnswer(answer);
+			vo.setwrong1(wrong1);
+			vo.setwrong2(wrong2);
+			vo.setwrong3(wrong3);
+			vo.setquizPassword(quizPassword);
+			
+//			데이터베이스에 저장해준다.
+			boolean flag = EnteringDAO.update(vo);
+			this.setVisible(false);
+			
+			
+			}
+			else {
+				JOptionPane.showMessageDialog(null, "비밀번호를 다시 확인해주세요");
+			}
+			
+			break;
+	
 		}
+	}
+	public JButton getSaveButton() {
+		return saveButton;
+	}
+
+	public void setSaveButton(JButton saveButton) {
+		this.saveButton = saveButton;
 	}
 	
 	
