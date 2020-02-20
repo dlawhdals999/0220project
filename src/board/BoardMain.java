@@ -5,7 +5,12 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.text.SimpleDateFormat;
+import java.time.temporal.JulianFields;
 import java.util.ArrayList;
 
 import javax.swing.ImageIcon;
@@ -14,12 +19,14 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.plaf.basic.BasicInternalFrameTitlePane.RestoreAction;
 import javax.swing.table.DefaultTableModel;
 
 import chatting.MultiChatClient;
 import login.LoginMain;
 import login.MemberInfoVO;
 import login.SignUpMain;
+import quiz.EnteringDAO;
 import quiz.EnteringMain;
 import quiz.QuizDAO;
 import quiz.QuizMain;
@@ -29,6 +36,10 @@ public class BoardMain extends JFrame implements ActionListener{
 	
 	static MemberInfoVO mvo = new MemberInfoVO();
 	
+//	마우스에서 클릭했을때 정보를 얻어오기위해 사용되는 변수
+	int row, col;
+	int choice;
+	String passwordCheck;
 	
 	static JButton solveButton = new JButton("문제풀기");
 	static JButton inputButton = new JButton("문제입력");
@@ -37,6 +48,9 @@ public class BoardMain extends JFrame implements ActionListener{
 	static JButton chatButton = new JButton("채팅창");
 	static JButton loginButton = new JButton("로그인");
 	static JButton joinButton = new JButton("회원가입");
+	static JButton resetButton = new JButton("새로고침");
+	String[] columnNames = { "번호", "문제", "작성일" };
+	DefaultTableModel model = new DefaultTableModel(columnNames,0);
 	
 	ArrayList<QuizVO> quizvo = new ArrayList<QuizVO>();
 	
@@ -49,8 +63,6 @@ public class BoardMain extends JFrame implements ActionListener{
 		setLayout(null);
 		setResizable(false);
 		
-		String[] columnNames = { "번호", "문제", "작성일" };
-		DefaultTableModel model = new DefaultTableModel(columnNames,0);
 		JTable table = new JTable(model);
 		JScrollPane sc = new JScrollPane(table);
 		sc.setBounds(150,132,684,283);
@@ -76,41 +88,24 @@ public class BoardMain extends JFrame implements ActionListener{
 //		 테이블에 마우스클릭하면 인덱스 가져오기
 		table.addMouseListener(new MouseAdapter() {
 			
+//			마우스로 클릭했을때 정보를얻어온다.
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				/*
-//				getSelectedRow() : JTable에서 몇 번째 행이 선택되었나 얻어온다.
-//				System.out.println("선택된 행 : " + table.getSelectedRow());
-				int position = table.getSelectedRow();
 				
-//				테이블에 저장된 전체 글 목록에서 JTable에서 선택한 행에 해당되는 글 1건을 얻어오는 select sql 명령을 실행하는 MemoProjectDAO
-//				클래스의 메소드를 호출하고 리턴되는 결과를 MemoVO 클래스 객체로 받는다.
-				MemoVO vo = MemoProjectDAO.selectByIdx(position);
-				
-				
-				
-				int row = table.getSelectedRow();
-//				getSelectedColumn() : JTable에서 몇 번째 열이 선택되었나 얻어온다.
-//				int col = table.getSelectedColumn();
-//				getValueAt(row, col) : JTable에서 row행 col열에 위치한 데이터를 얻어온다.
-				Object object = table.getValueAt(row, 0);
-				int position = Integer.parseInt((String) object);
-				MemoVO vo = MemoProjectDAO.selectByIdx(position);
-				System.out.println(vo);
-				
-				
-//				리턴받은 MemoVO 클래스 객체에 저장된 데이터를 텍스트 필드에 넣어주고 포커스를 패스워드 필드로 옮겨준다.
-				nameField.setText(vo.getName());
-				passwordField.setText("");
-				memoField.setText(vo.getMemo());
-				passwordField.requestFocus();
-				nameField.setEditable(false);
-				*/
+				row = table.getSelectedRow();
+				col = table.getSelectedColumn();
+//				System.out.println(row + "행 " + col + "열");
+				choice = Integer.parseInt((String) table.getValueAt(row, 0));
+//				System.out.println(choice);
 				
 			}
 			
-			
 		});
+		resetButton.setBounds(850,30,100,40);
+		MainPanel.add(resetButton);
+		resetButton.setFont(new Font("굴림", Font.BOLD, 10));
+		resetButton.addActionListener(this);
+		
 		
 		chatButton.setBorder(null);
 		chatButton.setBounds(457, 537, 146, 88);
@@ -195,6 +190,11 @@ public class BoardMain extends JFrame implements ActionListener{
 		
 		
 		switch (e.getActionCommand()) {
+		case "새로고침" :		
+			JOptionPane.showMessageDialog(null, "새로고침");
+			reset();
+			break;
+				
 		case "문제풀기":
 			QuizMain quizmain = new QuizMain();
 			quizmain.setVisible(true);
@@ -203,11 +203,37 @@ public class BoardMain extends JFrame implements ActionListener{
 			EnteringMain entering = new EnteringMain();
 			break;
 		case "문제수정":
-			JOptionPane.showMessageDialog(null, "수정(아직안함)");
+			passwordCheck = JOptionPane.showInputDialog("문제의 비밀번호를 입력해주세요");
+			if(passwordCheck == null) {
+			}else {
+				EnteringDAO.check(choice, passwordCheck);
+			}
 			break;
 		case "문제삭제":
-			JOptionPane.showMessageDialog(null, "삭제(아직안함)");
+			passwordCheck = JOptionPane.showInputDialog("문제의 비밀번호를 입력해주세요");
+			if(passwordCheck == null) {
+			}else {
+				
+				try {
+					Connection conn = DBUtil.getMySQLConnection();
+					String check = "SELECT quizpassword FROM quiz WHERE idx = '" + choice + "'" ;
+					PreparedStatement pstmt = conn.prepareStatement(check);
+					ResultSet rs = pstmt.executeQuery();
+					rs.next();
+					if(rs.getString("quizpassword").equals(passwordCheck)) {
+						String sql = "DELETE FROM quiz WHERE idx = '" + choice + "'";
+						PreparedStatement pstmt1 = conn.prepareStatement(sql);
+						pstmt1.executeUpdate();
+						JOptionPane.showMessageDialog(null, choice + "번 문제가 삭제되었습니다!");
+					}else {
+						JOptionPane.showMessageDialog(null, "비밀번호가 일치하지 않습니다.");
+					}
+				}catch(Exception e1) {
+					e1.printStackTrace();
+				}
+			}
 			break;
+			
 		case "채팅창":
 			MultiChatClient chat = new MultiChatClient();
 			Thread thread = new Thread(chat);
@@ -248,6 +274,27 @@ public class BoardMain extends JFrame implements ActionListener{
 			break;
 		}
 	}
+
+	private void reset() {
+		//			quizvo 객체배열로 가져오기
+					quizvo = QuizDAO.setquiz();
+		
+					for (int i = model.getRowCount() - 1; i >=0 ; i--) {
+		//				removeRow() : JTable 디자인에 사용한 DefaultTableModel 클래스 객체에서 JTable에 넣어준 row 번째 데이터를 제거한다.
+						model.removeRow(i);
+					}
+		//			quizvo 테이블에 올리기
+					SimpleDateFormat sdf = new SimpleDateFormat("yyyy.MM.dd(E) H:mm:ss");
+					String[] rowData = new String[3];
+					
+					for (QuizVO data : quizvo) {
+							rowData[0] = data.getIdx() + "";
+							rowData[1] = data.getQuiz();
+							rowData[2] = sdf.format(data.getWriteDate());
+							model.addRow(rowData);
+						}
+	}
+	
 
 	public static MemberInfoVO getMvo() {
 		return mvo;
