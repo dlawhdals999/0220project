@@ -1,0 +1,53 @@
+package frame;
+
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.EventQueue;
+import java.awt.Font;
+import java.awt.event.FocusEvent;
+
+import javax.swing.AbstractButton;
+import javax.swing.ImageIcon;
+import javax.swing.JFrame;
+import javax.swing.JButton;
+import javax.swing.JTextField;
+import javax.swing.JLabel;
+
+public class ChattingFrame extends JFrame{
+	
+	static	JLabel label = new JLabel("");
+	static private JTextField textField = new JTextField();
+
+
+	public static void main(String[] args) {
+		
+		ChattingFrame window = new ChattingFrame();
+		
+	}
+
+	public ChattingFrame() {
+		mainPanel cattingpanel = new mainPanel(new ImageIcon("C:\\project_CYJ\\teamproject\\workspace\\Frame\\src\\images\\chatting.png").getImage());
+		getContentPane().add(cattingpanel, BorderLayout.NORTH);	
+		
+		label.setBounds(0, 0, 503, 715);
+		label.setOpaque(true);
+		label.setBackground(new Color(255, 0, 0, 0));
+		label.setForeground(Color.white);
+		label.setFont(new Font("D2Coding", Font.BOLD, 15));
+		label.setVerticalAlignment(JLabel.BOTTOM);
+		cattingpanel.add(label);
+		
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		
+		setLocation(550, 100);
+		setSize(cattingpanel.getDim());
+		setPreferredSize(cattingpanel.getDim()); 
+		pack();
+
+		setVisible(true);
+		
+	}
+
+
+	
+}
