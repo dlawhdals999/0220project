@@ -23,11 +23,10 @@ import javax.swing.JTextField;
 public class SignUpMain extends JFrame implements ActionListener, ItemListener{
 
 	MemberInfoVO vo = new MemberInfoVO();
-	boolean gender;
+	boolean gender ;
 	JRadioButton man, woman;
 	ButtonGroup group = new ButtonGroup();
 
-	
 	JFrame frame;
 	JTextField idText;
 	JTextField passwordText;
@@ -77,11 +76,13 @@ public class SignUpMain extends JFrame implements ActionListener, ItemListener{
 		man = new JRadioButton("");
 		man.setBounds(505, 453, 20, 23);
 		man.setBackground(new Color(9803));
+		man.addItemListener(this);
 		SignUpPanel.add(man);
 		
 		woman = new JRadioButton("");
 		woman.setBackground(new Color(0, 38, 75));
 		woman.setBounds(605, 453, 20, 23);
+		woman.addItemListener(this);
 		SignUpPanel.add(woman);
 		
 		group.add(man);
@@ -153,6 +154,7 @@ public class SignUpMain extends JFrame implements ActionListener, ItemListener{
 				}else if(!man.isSelected() && !woman.isSelected()) {
 					JOptionPane.showMessageDialog(null, "성별을 선택해주세요");
 				}else {
+					System.out.println(gender);
 					vo.setUserID(userID);
 					vo.setUserPW(userPW);
 					vo.setUserName(userName);
